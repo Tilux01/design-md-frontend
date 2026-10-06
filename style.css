@@ -894,3 +894,258 @@ body {
   color: white;
 }
 
+/* --- Chat Alignment & Responsiveness Enhancements --- */
+.chat-message.user-message {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  align-self: flex-end;
+  margin-left: auto;
+  max-width: 80%;
+}
+
+.chat-message.user-message .message-content {
+  background: linear-gradient(135deg, rgba(138, 180, 248, 0.15), rgba(138, 180, 248, 0.05));
+  border: 1px solid rgba(138, 180, 248, 0.25);
+  border-radius: 16px;
+  border-top-right-radius: 4px;
+  color: white;
+  padding: 12px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.chat-message.ai-message {
+  align-self: flex-start;
+  margin-right: auto;
+  max-width: 100%;
+}
+
+.chat-message.ai-message .message-content {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  border-top-left-radius: 4px;
+  padding: 20px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Library Category Filter Bar & Count Badges --- */
+.count-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(138, 180, 248, 0.15);
+  color: #8ab4f8;
+  border: 1px solid rgba(138, 180, 248, 0.3);
+}
+
+.category-badge-pill {
+  background: rgba(54, 179, 126, 0.15);
+  color: #36b37e;
+  border-color: rgba(54, 179, 126, 0.3);
+}
+
+.category-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 0 16px 0;
+  margin-bottom: 20px;
+  scrollbar-width: thin;
+}
+
+.category-filter-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.category-filter-bar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.category-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.category-pill.active {
+  background: var(--accent-blue);
+  color: white;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 12px rgba(138, 180, 248, 0.4);
+}
+
+.category-pill .pill-count {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 9999px;
+}
+
+/* --- Copyable Template & Code Snippet Styling --- */
+.copy-spec-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(138, 180, 248, 0.1);
+  border: 1px solid rgba(138, 180, 248, 0.3);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+
+.copy-spec-banner span {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #8ab4f8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-btn {
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+  background: #73a1f7;
+  transform: translateY(-1px);
+}
+
+.code-block-wrapper {
+  position: relative;
+  margin: 16px 0;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  padding-top: 36px;
+}
+
+.code-block-wrapper .copy-code-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.code-block-wrapper .copy-code-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Dedicated Chat App Link Button in Header */
+.chat-mode-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(138, 180, 248, 0.12);
+  border: 1px solid rgba(138, 180, 248, 0.25);
+  color: #8ab4f8;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.chat-mode-link-btn:hover {
+  background: rgba(138, 180, 248, 0.25);
+  color: white;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    background: #0b0f19;
+    border-right: 1px solid var(--border-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .view-section {
+    padding: 0 16px;
+  }
+
+  .chat-message.user-message {
+    max-width: 90%;
+  }
+
+  .input-container {
+    width: calc(100% - 32px);
+    bottom: 16px;
+  }
+
+  .chat-mode-link-btn span {
+    display: none;
+  }
+}
+

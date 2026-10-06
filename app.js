@@ -1,9 +1,3 @@
-const API_BASE = window.API_BASE_URL || (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? '' 
-    : 'https://design-md-backend.vercel.app'
-);
-
 document.addEventListener('DOMContentLoaded', () => {
   // Toast Notification System
   function showToast(message, type = 'info', duration = 4000) {
@@ -64,6 +58,27 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetView === 'library-view') loadLibrary();
     });
   });
+
+  // Mobile Menu Toggle
+  const mobileToggle = document.getElementById('mobile-menu-toggle');
+  const appSidebar = document.getElementById('app-sidebar');
+  if (mobileToggle && appSidebar) {
+    mobileToggle.addEventListener('click', () => {
+      appSidebar.classList.toggle('open');
+    });
+    // Close sidebar when a nav btn is clicked on mobile
+    appSidebar.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) appSidebar.classList.remove('open');
+      });
+    });
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768 && !appSidebar.contains(e.target) && e.target !== mobileToggle) {
+        appSidebar.classList.remove('open');
+      }
+    });
+  }
 
   // Chat UI Elements
   const chatHistory = document.getElementById('chat-history');
@@ -184,17 +199,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // File Upload
         const formData = new FormData();
         filesToUpload.forEach(f => formData.append('designFiles', f));
-        response = await fetch(`${API_BASE}/api/upload-design`, { method: 'POST', body: formData });
+        response = await fetch('/api/upload-design', { method: 'POST', body: formData });
       } else if (isUrl) {
         // URL Process
-        response = await fetch(`${API_BASE}/api/process-url`, {
+        response = await fetch('/api/process-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: text })
         });
       } else {
         // Plain text chat prompt -> RAG search for matching design
-        response = await fetch(`${API_BASE}/api/chat`, {
+        response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: text })
@@ -213,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           // File upload / URL processing fallback
           const fileId = result.new_design.id;
-          const mdRes = await fetch(`${API_BASE}/api/designs/${fileId}`);
+          const mdRes = await fetch(`/api/designs/${fileId}`);
           const mdText = await mdRes.text();
           appendAiMessage(mdText);
         }
@@ -257,13 +272,57 @@ document.addEventListener('DOMContentLoaded', () => {
   function appendAiMessage(markdownContent) {
     const wrapper = document.createElement('div');
     wrapper.className = 'chat-message ai-message';
+
+    const isTemplate = markdownContent.includes('# 1.') || markdownContent.length > 800;
+    const templateBanner = isTemplate ? `
+      <div class="copy-spec-banner">
+        <span>✦ Copyable Design.Md Template</span>
+        <button class="copy-btn copy-full-spec-btn">Copy Full Template</button>
+      </div>` : '';
+
     wrapper.innerHTML = `
       <div class="avatar ai-avatar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
       </div>
-      <div class="message-content markdown-body">${marked.parse(markdownContent)}</div>
+      <div class="message-content markdown-body">
+        ${templateBanner}
+        <div class="markdown-body-inner">${marked.parse(markdownContent)}</div>
+      </div>
     `;
+
     chatHistory.appendChild(wrapper);
+
+    // Copy full spec
+    const fullCopyBtn = wrapper.querySelector('.copy-full-spec-btn');
+    if (fullCopyBtn) {
+      fullCopyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(markdownContent);
+        fullCopyBtn.textContent = '✓ Copied!';
+        showToast('Copied full design template to clipboard!', 'success');
+        setTimeout(() => fullCopyBtn.textContent = 'Copy Full Template', 2500);
+      });
+    }
+
+    // Inject copy buttons on each code block
+    wrapper.querySelectorAll('pre').forEach(pre => {
+      const code = pre.querySelector('code');
+      if (!code) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'code-block-wrapper';
+      const btn = document.createElement('button');
+      btn.className = 'copy-code-btn';
+      btn.textContent = 'Copy Code';
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(code.innerText);
+        btn.textContent = '✓ Copied!';
+        showToast('Code block copied!', 'success');
+        setTimeout(() => btn.textContent = 'Copy Code', 2000);
+      });
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(btn);
+      wrap.appendChild(pre);
+    });
+
     setTimeout(scrollToBottom, 50);
   }
 
@@ -305,36 +364,125 @@ document.addEventListener('DOMContentLoaded', () => {
   const libraryGrid = document.getElementById('library-grid');
   document.getElementById('refreshLibraryBtn').addEventListener('click', loadLibrary);
 
+  let allLibraryItems = [];
+  let activeCategory = 'All';
+
   async function loadLibrary() {
     libraryGrid.innerHTML = '<p style="color:var(--text-secondary)">Loading index...</p>';
-    
+    const filterBar = document.getElementById('category-filter-bar');
+    if (filterBar) filterBar.innerHTML = '';
+
     try {
-      const response = await fetch(`${API_BASE}/api/index`);
+      const response = await fetch('/api/index');
       const items = await response.json();
-      
-      if (items.length === 0) {
-        libraryGrid.innerHTML = '<p style="color:var(--text-secondary)">No designs indexed yet.</p>';
+
+      allLibraryItems = [...items].reverse();
+
+      // Update count badges
+      const totalBadge = document.getElementById('total-designs-badge');
+      if (totalBadge) totalBadge.textContent = `${allLibraryItems.length} Designs`;
+
+      if (allLibraryItems.length === 0) {
+        libraryGrid.innerHTML = '<p style="color:var(--text-secondary)">No designs indexed yet. Start the Auto Engine or upload a design!</p>';
         return;
       }
-      
-      libraryGrid.innerHTML = '';
-      items.reverse().forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'design-card';
-        card.innerHTML = `
-          <h3>${item.style || 'Modern UI'}</h3>
-          <p>${item.device} • ${item.platform}</p>
-          <button class="card-btn view-spec-btn" data-id="${item.id}">View Spec</button>
-        `;
-        libraryGrid.appendChild(card);
+
+      // Build category map from platform/device/style fields
+      const categoryMap = {};
+      allLibraryItems.forEach(item => {
+        const cats = [];
+        if (item.device) cats.push(item.device);
+        if (item.platform) cats.push(item.platform);
+        cats.forEach(cat => {
+          const key = cat.trim();
+          if (key && key !== 'N/A' && key !== 'Unknown') {
+            categoryMap[key] = (categoryMap[key] || 0) + 1;
+          }
+        });
       });
 
-      document.querySelectorAll('.view-spec-btn').forEach(btn => {
-        btn.addEventListener('click', () => loadSpec(btn.getAttribute('data-id')));
-      });
+      const categories = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
+      const totalCatBadge = document.getElementById('total-categories-badge');
+      if (totalCatBadge) totalCatBadge.textContent = `${categories.length} Categories`;
+
+      // Render filter bar
+      if (filterBar) {
+        const allPill = document.createElement('button');
+        allPill.className = 'category-pill active';
+        allPill.innerHTML = `All <span class="pill-count">${allLibraryItems.length}</span>`;
+        allPill.addEventListener('click', () => {
+          activeCategory = 'All';
+          filterBar.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+          allPill.classList.add('active');
+          renderLibraryCards(allLibraryItems);
+        });
+        filterBar.appendChild(allPill);
+
+        categories.forEach(([cat, count]) => {
+          const pill = document.createElement('button');
+          pill.className = 'category-pill';
+          pill.innerHTML = `${cat} <span class="pill-count">${count}</span>`;
+          pill.addEventListener('click', () => {
+            activeCategory = cat;
+            filterBar.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            const filtered = allLibraryItems.filter(i =>
+              (i.device || '').includes(cat) || (i.platform || '').includes(cat)
+            );
+            renderLibraryCards(filtered);
+          });
+          filterBar.appendChild(pill);
+        });
+      }
+
+      renderLibraryCards(allLibraryItems);
     } catch (err) {
       libraryGrid.innerHTML = `<p style="color:#ef4444">Error loading library: ${err.message}</p>`;
     }
+  }
+
+  function renderLibraryCards(items) {
+    libraryGrid.innerHTML = '';
+    if (items.length === 0) {
+      libraryGrid.innerHTML = '<p style="color:var(--text-secondary)">No designs in this category.</p>';
+      return;
+    }
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'design-card';
+      card.innerHTML = `
+        <h3>${item.style || 'Modern UI'}</h3>
+        <p>${item.device || ''} ${item.platform ? '&bull; ' + item.platform : ''}</p>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="card-btn view-spec-btn" data-id="${item.id}">View Spec</button>
+          <button class="card-btn copy-spec-btn" data-id="${item.id}" style="background:rgba(138,180,248,0.12);color:#8ab4f8;border:1px solid rgba(138,180,248,0.3);">Copy Template</button>
+        </div>
+      `;
+      libraryGrid.appendChild(card);
+    });
+
+    libraryGrid.querySelectorAll('.view-spec-btn').forEach(btn => {
+      btn.addEventListener('click', () => loadSpec(btn.getAttribute('data-id')));
+    });
+
+    libraryGrid.querySelectorAll('.copy-spec-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        btn.textContent = 'Copying...';
+        try {
+          const res = await fetch(`/api/designs/${id}`);
+          if (!res.ok) throw new Error('Not found');
+          const text = await res.text();
+          await navigator.clipboard.writeText(text);
+          btn.textContent = '✓ Copied!';
+          showToast('Design template copied to clipboard!', 'success');
+          setTimeout(() => btn.textContent = 'Copy Template', 2500);
+        } catch (err) {
+          btn.textContent = 'Copy Template';
+          showToast('Copy failed: ' + err.message, 'error');
+        }
+      });
+    });
   }
 
   // Modal Logic
@@ -349,10 +497,48 @@ document.addEventListener('DOMContentLoaded', () => {
     markdownContainer.innerHTML = 'Loading...';
     modal.classList.remove('hidden');
     try {
-      const res = await fetch(`${API_BASE}/api/designs/${id}`);
+      const res = await fetch(`/api/designs/${id}`);
       if (!res.ok) throw new Error('Spec not found');
       const text = await res.text();
+
+      // Modal header copy button
+      const modalHeader = document.querySelector('.modal-header');
+      const existingCopyBtn = modalHeader ? modalHeader.querySelector('.modal-copy-btn') : null;
+      if (existingCopyBtn) existingCopyBtn.remove();
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn modal-copy-btn';
+      copyBtn.style.marginRight = 'auto';
+      copyBtn.textContent = 'Copy Full Template';
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(text);
+        copyBtn.textContent = '✓ Copied!';
+        showToast('Design template copied to clipboard!', 'success');
+        setTimeout(() => copyBtn.textContent = 'Copy Full Template', 2500);
+      });
+      if (modalHeader) modalHeader.insertBefore(copyBtn, modalHeader.querySelector('#close-modal'));
+
       markdownContainer.innerHTML = marked.parse(text);
+
+      // Code block copy buttons in modal
+      markdownContainer.querySelectorAll('pre').forEach(pre => {
+        const code = pre.querySelector('code');
+        if (!code) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'code-block-wrapper';
+        const btn = document.createElement('button');
+        btn.className = 'copy-code-btn';
+        btn.textContent = 'Copy Code';
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(code.innerText);
+          btn.textContent = '✓ Copied!';
+          showToast('Code block copied!', 'success');
+          setTimeout(() => btn.textContent = 'Copy Code', 2000);
+        });
+        pre.parentNode.insertBefore(wrap, pre);
+        wrap.appendChild(btn);
+        wrap.appendChild(pre);
+      });
     } catch (err) {
       markdownContainer.innerHTML = `<p style="color:#ef4444">${err.message}</p>`;
     }
@@ -368,14 +554,14 @@ document.addEventListener('DOMContentLoaded', () => {
   startCrawlerBtn.addEventListener('click', async () => {
     startCrawlerBtn.disabled = true;
     try {
-      await fetch(`${API_BASE}/api/crawler/start`, { method: 'POST' });
+      await fetch('/api/crawler/start', { method: 'POST' });
       startPolling();
     } catch (err) { showToast(err.message, 'error'); startCrawlerBtn.disabled = false; }
   });
 
   stopCrawlerBtn.addEventListener('click', async () => {
     stopCrawlerBtn.disabled = true;
-    try { await fetch(`${API_BASE}/api/crawler/stop`, { method: 'POST' }); } catch (err) {}
+    try { await fetch('/api/crawler/stop', { method: 'POST' }); } catch (err) {}
   });
 
   function startPolling() {
@@ -386,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchCrawlerStatus() {
     try {
-      const res = await fetch(`${API_BASE}/api/crawler/status`);
+      const res = await fetch('/api/crawler/status');
       const stats = await res.json();
       
       statusLabel.textContent = `Status: ${stats.status.toUpperCase()}`;
@@ -435,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     extractedMedia = [];
 
     try {
-      const res = await fetch(`${API_BASE}/api/scrape-media`, {
+      const res = await fetch('/api/scrape-media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
@@ -469,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = `media-card ${item.selected ? 'selected' : ''}`;
       
-      const proxyUrl = `${API_BASE}/api/proxy-media?url=${encodeURIComponent(item.url)}`;
+      const proxyUrl = `/api/proxy-media?url=${encodeURIComponent(item.url)}`;
       const mediaHtml = item.type === 'video'
         ? `<video src="${proxyUrl}" controls muted loop preload="metadata" referrerpolicy="no-referrer"></video>`
         : `<img src="${proxyUrl}" loading="lazy" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/300x200?text=Preview+Unavailable'">`;
@@ -527,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showMediaModal(url, type) {
     modal.classList.remove('hidden');
-    const proxyUrl = `${API_BASE}/api/proxy-media?url=${encodeURIComponent(url)}`;
+    const proxyUrl = `/api/proxy-media?url=${encodeURIComponent(url)}`;
     if (type === 'video') {
       markdownContainer.innerHTML = `
         <div style="text-align:center;">
@@ -581,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
       batchProgressText.textContent = `Processing asset ${i + 1} of ${total} (${pct}% complete)...`;
 
       try {
-        const res = await fetch(`${API_BASE}/api/process-selected-media`, {
+        const res = await fetch('/api/process-selected-media', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ items: [item] })
