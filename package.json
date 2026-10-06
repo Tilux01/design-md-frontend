@@ -1,0 +1,8 @@
+{
+  "name": "design-md-frontend",
+  "version": "1.0.0",
+  "description": "UI/UX Design Engine - Frontend Interface",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
