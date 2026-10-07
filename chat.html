@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Design Intelligence</title>
+  <title>Design.Md Chat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="chat.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
@@ -28,7 +28,7 @@
         <div class="header-right">
           <span class="personalize-label">Dark Glass Mode</span>
           <div class="header-icons">
-            <a href="https://design-md-chat.vercel.app" target="_blank" class="chat-mode-link-btn" title="Open Dedicated Chat App">
+            <a href="/chat.html" target="_blank" class="chat-mode-link-btn" title="Open Dedicated Chat App">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               <span>Dedicated Chat App</span>
             </a>
@@ -57,7 +57,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg>
               Media Extractor
             </button>
-            <a href="https://design-md-chat.vercel.app" target="_blank" class="nav-btn" style="text-decoration:none; margin-top:12px; background:rgba(138,180,248,0.15); color:#8ab4f8; border:1px solid rgba(138,180,248,0.3);">
+            <a href="chat.html" target="_blank" class="nav-btn" style="text-decoration:none; margin-top:12px; background:rgba(138,180,248,0.15); color:#8ab4f8; border:1px solid rgba(138,180,248,0.3);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               Chat App Mode &#8594;
             </a>
@@ -114,26 +114,7 @@
           </section>
 
           <!-- Library View -->
-          <section id="library-view" class="view-section hidden">
-            <header class="section-header flex-header">
-              <div>
-                <h1 style="color: white; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                  Design Library
-                  <span class="count-pill" id="total-designs-badge">0 Designs</span>
-                  <span class="count-pill category-badge-pill" id="total-categories-badge">0 Categories</span>
-                </h1>
-                <p style="color: #9aa0a6; font-size: 0.88rem; margin-top: 4px;">Indexed UI/UX design specifications. Filter by device, framework, or category.</p>
-              </div>
-              <button class="btn outline-btn" id="refreshLibraryBtn" title="Refresh Library">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-              </button>
-            </header>
-
-            <!-- Category Filter Bar -->
-            <div class="category-filter-bar" id="category-filter-bar"></div>
-
-            <div class="library-grid" id="library-grid"></div>
-          </section>
+          
 
           <!-- Auto Crawler View (Adapted to theme) -->
           <section id="crawler-view" class="view-section hidden">
@@ -216,6 +197,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="chat.js"></script>
 </body>
 </html>
