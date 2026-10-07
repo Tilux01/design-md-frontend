@@ -452,7 +452,6 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
   padding-bottom: 40px;
-  overflow-y: auto;
 }
 
 .design-card {
@@ -461,10 +460,21 @@ body {
   padding: 20px;
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.design-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
-.design-card p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; }
+.design-card h3 { 
+  font-size: 1.05rem; 
+  margin-bottom: 8px; 
+}
+.design-card p { 
+  font-size: 0.85rem; 
+  color: var(--text-secondary); 
+  margin-bottom: 16px; 
+  flex-grow: 1; /* Pushes buttons to bottom */
+}
 
 .card-btn {
   background: rgba(255,255,255,0.1);
@@ -475,6 +485,7 @@ body {
   cursor: pointer;
   width: 100%;
   font-size: 0.85rem;
+  margin-top: auto; /* Aligns to bottom if flex container */
 }
 
 .crawler-box {

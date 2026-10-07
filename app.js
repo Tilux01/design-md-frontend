@@ -1,3 +1,5 @@
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : 'https://design-md-backend.vercel.app';
+
 document.addEventListener('DOMContentLoaded', () => {
   // Toast Notification System
   function showToast(message, type = 'info', duration = 4000) {
@@ -199,17 +201,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // File Upload
         const formData = new FormData();
         filesToUpload.forEach(f => formData.append('designFiles', f));
-        response = await fetch('/api/upload-design', { method: 'POST', body: formData });
+        response = await fetch(API_BASE + '/api/upload-design', { method: 'POST', body: formData });
       } else if (isUrl) {
         // URL Process
-        response = await fetch('/api/process-url', {
+        response = await fetch(API_BASE + '/api/process-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: text })
         });
       } else {
         // Plain text chat prompt -> RAG search for matching design
-        response = await fetch('/api/chat', {
+        response = await fetch(API_BASE + '/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: text })
@@ -228,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           // File upload / URL processing fallback
           const fileId = result.new_design.id;
-          const mdRes = await fetch(`/api/designs/${fileId}`);
+          const mdRes = await fetch(API_BASE + `/api/designs/${fileId}`);
           const mdText = await mdRes.text();
           appendAiMessage(mdText);
         }
@@ -373,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterBar) filterBar.innerHTML = '';
 
     try {
-      const response = await fetch('/api/index');
+      const response = await fetch(API_BASE + '/api/index');
       const items = await response.json();
 
       allLibraryItems = [...items].reverse();
@@ -415,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
           filterBar.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
           allPill.classList.add('active');
           renderLibraryCards(allLibraryItems);
+          libraryGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
         filterBar.appendChild(allPill);
 
@@ -430,6 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
               (i.device || '').includes(cat) || (i.platform || '').includes(cat)
             );
             renderLibraryCards(filtered);
+            libraryGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
           });
           filterBar.appendChild(pill);
         });
@@ -470,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = btn.getAttribute('data-id');
         btn.textContent = 'Copying...';
         try {
-          const res = await fetch(`/api/designs/${id}`);
+          const res = await fetch(API_BASE + `/api/designs/${id}`);
           if (!res.ok) throw new Error('Not found');
           const text = await res.text();
           await navigator.clipboard.writeText(text);
@@ -497,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
     markdownContainer.innerHTML = 'Loading...';
     modal.classList.remove('hidden');
     try {
-      const res = await fetch(`/api/designs/${id}`);
+      const res = await fetch(API_BASE + `/api/designs/${id}`);
       if (!res.ok) throw new Error('Spec not found');
       const text = await res.text();
 
@@ -554,14 +558,14 @@ document.addEventListener('DOMContentLoaded', () => {
   startCrawlerBtn.addEventListener('click', async () => {
     startCrawlerBtn.disabled = true;
     try {
-      await fetch('/api/crawler/start', { method: 'POST' });
+      await fetch(API_BASE + '/api/crawler/start', { method: 'POST' });
       startPolling();
     } catch (err) { showToast(err.message, 'error'); startCrawlerBtn.disabled = false; }
   });
 
   stopCrawlerBtn.addEventListener('click', async () => {
     stopCrawlerBtn.disabled = true;
-    try { await fetch('/api/crawler/stop', { method: 'POST' }); } catch (err) {}
+    try { await fetch(API_BASE + '/api/crawler/stop', { method: 'POST' }); } catch (err) {}
   });
 
   function startPolling() {
@@ -572,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchCrawlerStatus() {
     try {
-      const res = await fetch('/api/crawler/status');
+      const res = await fetch(API_BASE + '/api/crawler/status');
       const stats = await res.json();
       
       statusLabel.textContent = `Status: ${stats.status.toUpperCase()}`;
@@ -621,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
     extractedMedia = [];
 
     try {
-      const res = await fetch('/api/scrape-media', {
+      const res = await fetch(API_BASE + '/api/scrape-media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
@@ -767,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
       batchProgressText.textContent = `Processing asset ${i + 1} of ${total} (${pct}% complete)...`;
 
       try {
-        const res = await fetch('/api/process-selected-media', {
+        const res = await fetch(API_BASE + '/api/process-selected-media', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ items: [item] })
