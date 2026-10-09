@@ -63,15 +63,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentFiles = [];
 
   function scrollToBottom() {
-    chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
+    if (chatHistory) {
+      chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
+    }
   }
 
   // Suggestion Chips Click
   suggestionChips.forEach(chip => {
     chip.addEventListener('click', () => {
-      chatInput.value = chip.textContent.trim();
-      checkSubmitState();
-      submitBtn.click();
+      if (chatInput) {
+        chatInput.value = chip.textContent.trim();
+        checkSubmitState();
+        if (submitBtn) submitBtn.click();
+      }
     });
   });
 
@@ -101,8 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('paste', (e) => {
     const pastedText = (e.clipboardData || window.clipboardData).getData('text');
     if (pastedText && (pastedText.startsWith('http://') || pastedText.startsWith('https://'))) {
-      chatInput.value = pastedText;
-      checkSubmitState();
+      if (chatInput) {
+        chatInput.value = pastedText;
+        checkSubmitState();
+      }
       return;
     }
 
@@ -163,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (chatInput) {
     chatInput.addEventListener('input', checkSubmitState);
     chatInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !submitBtn.disabled) {
+      if (e.key === 'Enter' && submitBtn && !submitBtn.disabled) {
         submitBtn.click();
       }
     });
@@ -217,35 +223,46 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
 
-        const result = await response.json();
+        let result = null;
+        if (response && response.ok) {
+          try {
+            const rawText = await response.text();
+            if (rawText && rawText.trim().startsWith('{')) {
+              result = JSON.parse(rawText);
+            }
+          } catch (jsonErr) {
+            console.warn('JSON parsing notice:', jsonErr);
+          }
+        }
+
         removeTypingIndicator(typingId);
 
-        if (result.success) {
+        if (result && result.success) {
           if (result.type === 'info') {
-            // Generate structured design.md dynamically for the user prompt
             const generatedSpec = generateDynamicDesignMd(text || 'Custom UI/UX System');
             appendAiMessage(generatedSpec, text);
-          } else if (result.type === 'design_response') {
-            const content = result.markdown;
-            appendAiMessage(content, text);
+          } else if (result.type === 'design_response' && result.markdown) {
+            appendAiMessage(result.markdown, text);
           } else if (result.new_design && result.new_design.id) {
-            const fileId = result.new_design.id;
-            const mdRes = await fetch(API_BASE + `/api/designs/${fileId}`);
-            const mdText = await mdRes.text();
-            appendAiMessage(mdText, text);
+            try {
+              const mdRes = await fetch(API_BASE + `/api/designs/${result.new_design.id}`);
+              const mdText = await mdRes.text();
+              appendAiMessage((mdText && mdText.trim().startsWith('#')) ? mdText : generateDynamicDesignMd(text || 'Custom UI/UX System'), text);
+            } catch {
+              appendAiMessage(generateDynamicDesignMd(text || 'Custom UI/UX System'), text);
+            }
           } else {
-            const generatedSpec = generateDynamicDesignMd(text || 'Uploaded Media Spec');
-            appendAiMessage(generatedSpec, text);
+            appendAiMessage(generateDynamicDesignMd(text || 'Uploaded Media Spec'), text);
           }
         } else {
-          // Fallback to local AI generator if backend service returned an issue
+          // Seamless fallback to design.md specification generator
           const generatedSpec = generateDynamicDesignMd(text || 'Custom UI/UX System');
           appendAiMessage(generatedSpec, text);
         }
 
       } catch (err) {
         removeTypingIndicator(typingId);
-        // Seamless fallback to client-side design.md generator if backend is offline/unreachable
+        // Guaranteed fallback to dynamic design.md generation
         const generatedSpec = generateDynamicDesignMd(text || 'Custom UI/UX System');
         appendAiMessage(generatedSpec, text);
       }
@@ -256,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Chat Rendering Helpers
   function appendUserMessage(text, files) {
+    if (!chatHistory) return;
     const wrapper = document.createElement('div');
     wrapper.className = 'chat-message user-message';
     
@@ -280,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function appendAiMessage(markdownContent, rawPrompt = 'design') {
+    if (!chatHistory) return;
     const wrapper = document.createElement('div');
     wrapper.className = 'chat-message ai-message';
 
@@ -367,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function appendTypingIndicator() {
+    if (!chatHistory) return null;
     const id = 'typing-' + Date.now();
     const wrapper = document.createElement('div');
     wrapper.className = 'chat-message ai-message';
@@ -388,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function removeTypingIndicator(id) {
+    if (!id) return;
     const el = document.getElementById(id);
     if (el) el.remove();
   }
@@ -398,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Dynamic Design.Md Generator fallback
   function generateDynamicDesignMd(prompt) {
-    const cleanPrompt = prompt.charAt(0).toUpperCase() + prompt.slice(1);
+    const cleanPrompt = prompt ? (prompt.charAt(0).toUpperCase() + prompt.slice(1)) : 'Custom UI/UX System';
     
     return `# design.md - ${cleanPrompt} Specification
 
