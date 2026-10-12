@@ -1,6 +1,14 @@
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-  ? '' 
-  : 'https://design-md-backend.vercel.app';
+const isLocalhost = Boolean(
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.endsWith('.local')
+);
+
+const API_BASE = window.API_BASE_URL || (
+  isLocalhost
+    ? (window.location.port === '3000' ? '' : 'http://localhost:3000')
+    : 'https://design-md-backend.vercel.app'
+);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Toast Notification System
